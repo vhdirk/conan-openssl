@@ -190,7 +190,7 @@ class OpenSSLConan(ConanFile):
 
         self.output.warn(config_line)
         self.run_in_src(config_line)
-        if self.settings.arch != "x86" and not tools.cross_building(self.settings):
+        if not tools.cross_building(self.settings):
             self.run_in_src("make depend")
         self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
         self.run_in_src("make", show_output=True)
