@@ -96,8 +96,8 @@ class OpenSSLConan(ConanFile):
             config_options_string += ' --with-zlib-include="%s"' % include_path
             config_options_string += ' --with-zlib-lib="%s"' % lib_path
 
-            tools.replace_in_file("./openssl-%s/Configure" % self.version, "::-lefence::", "::")
-            tools.replace_in_file("./openssl-%s/Configure" % self.version, "::-lefence ", "::")
+            tools.replace_in_file("./%s/Configure" % self.subfolder, "::-lefence::", "::")
+            tools.replace_in_file("./%s/Configure" % self.subfolder, "::-lefence ", "::")
             self.output.info("=====> Options: %s" % config_options_string)
 
         for option_name in self.options.values.fields:
@@ -254,7 +254,7 @@ class OpenSSLConan(ConanFile):
         # DYNLIBS IDS AND OTHER DYNLIB DEPS WITHOUT PATH, JUST THE LIBRARY NAME
         old_str = 'SHAREDFLAGS="$$SHAREDFLAGS -install_name $(INSTALLTOP)/$(LIBDIR)/$$SHLIB$'
         new_str = 'SHAREDFLAGS="$$SHAREDFLAGS -install_name $$SHLIB$'
-        tools.replace_in_file("./openssl-%s/Makefile.shared" % self.version, old_str, new_str)
+        tools.replace_in_file("./%s/Makefile.shared" % self.subfolder, old_str, new_str)
         self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
         self.run_in_src("make")
 
@@ -270,7 +270,7 @@ class OpenSSLConan(ConanFile):
         # DYNLIBS IDS AND OTHER DYNLIB DEPS WITHOUT PATH, JUST THE LIBRARY NAME
         old_str = 'SHAREDFLAGS="$$SHAREDFLAGS -install_name $(INSTALLTOP)/$(LIBDIR)/$$SHLIB$'
         new_str = 'SHAREDFLAGS="$$SHAREDFLAGS -install_name $$SHLIB$'
-        tools.replace_in_file("./openssl-%s/Makefile.shared" % self.version, old_str, new_str)
+        tools.replace_in_file("./%s/Makefile.shared" % self.subfolder, old_str, new_str)
         self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
         self.run_in_src("make")
 
@@ -312,11 +312,11 @@ class OpenSSLConan(ConanFile):
                         pass
                 raise Exception("Could not find any vs runtime in file")
 
-            replace_runtime_in_file("./openssl-%s/ms/ntdll.mak" % self.version)
-            replace_runtime_in_file("./openssl-%s/ms/nt.mak" % self.version)
+            replace_runtime_in_file("./%s/ms/ntdll.mak" % self.subfolder)
+            replace_runtime_in_file("./%s/ms/nt.mak" % self.subfolder)
             if self.settings.arch == "x86":  # Do not consider warning as errors, 1.0.2n error with x86 builds
-                tools.replace_in_file("./openssl-%s/ms/nt.mak" % self.version, "-WX", "")
-                tools.replace_in_file("./openssl-%s/ms/ntdll.mak" % self.version, "-WX", "")
+                tools.replace_in_file("./%s/ms/nt.mak" % self.subfolder, "-WX", "")
+                tools.replace_in_file("./%s/ms/ntdll.mak" % self.subfolder, "-WX", "")
 
             make_command = "nmake -f ms\\ntdll.mak" if self.options.shared else "nmake -f ms\\nt.mak "
             self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
