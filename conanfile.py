@@ -64,9 +64,6 @@ class OpenSSLConan(ConanFile):
         if client_version < Version("1.0.0"):
             raise Exception("This recipe only works with Conan client >= 1.0.0")
         del self.settings.compiler.libcxx
-        if self.settings.os == "Android" and self.settings.compiler == "clang":
-            raise Exception("Not supported Android + Clang, please submit a patch if you know "
-                            "how to build it: %s" % self.url)
 
     def requirements(self):
         if not self.options.no_zlib:
@@ -99,6 +96,10 @@ class OpenSSLConan(ConanFile):
             tools.replace_in_file("./%s/Configure" % self.subfolder, "::-lefence::", "::")
             tools.replace_in_file("./%s/Configure" % self.subfolder, "::-lefence ", "::")
             self.output.info("=====> Options: %s" % config_options_string)
+        if self.settings.os == "Android" and self.settings.compiler == "clang":
+            tools.replace_in_file("./openssl-%s/Configure" % self.version, 
+                                '''"android-armv7","gcc:-march=armv7-a -mandroid -I\$(ANDROID_DEV)/include -B\$(ANDROID_DEV)/lib -O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl:BN_LLONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${armv4_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",''', 
+                                '''"android-armv7","clang:$ENV{'CFLAGS'} -O3 -fomit-frame-pointer -Wall::-D_REENTRANT::-ldl $ENV{'LDFLAGS'}:BN_LLONG RC4_CHAR RC4_CHUNK DES_INT DES_UNROLL BF_PTR:${armv4_asm}:dlfcn:linux-shared:-fPIC::.so.\$(SHLIB_MAJOR).\$(SHLIB_MINOR)",''')
 
         for option_name in self.options.values.fields:
             activated = getattr(self.options, option_name)
