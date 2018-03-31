@@ -21,20 +21,20 @@ Download conan client from [Conan.io](https://conan.io) and run:
     
 ## Upload packages to server
 
-    $ conan upload OpenSSL/1.0.2n@conan/stable --all
+    $ conan upload OpenSSL/1.0.2o@conan/stable --all
     
 ## Reuse the packages
 
 ### Basic setup
 
-    $ conan install OpenSSL/1.0.2n@conan/stable
+    $ conan install OpenSSL/1.0.2o@conan/stable
     
 ### Project setup
 
 If you handle multiple dependencies in your project is better to add a *conanfile.txt*
     
     [requires]
-    OpenSSL/1.0.2n@conan/stable
+    OpenSSL/1.0.2o@conan/stable
 
     [options]
     OpenSSL:shared=false # true
