@@ -202,21 +202,23 @@ class OpenSSLConan(ConanFile):
         self.run_in_src("make", show_output=True)
 
     def ios_build(self, config_options_string):
-        def find_sysroot(sdk_name):
-            return tools.XCRun(self.settings, sdk_name).sdk_path
-
-        def find_cc(settings, sdk_name=None):
-            return tools.XCRun(settings, sdk_name).cc
-
         command = "./Configure iphoneos-cross %s" % config_options_string
 
         sdk = tools.apple_sdk_name(self.settings)
-        sysroot = find_sysroot(sdk)
-        cc = find_cc(self.settings, sdk)
+        sysroot = tools.XCRun(self.settings, sdk).sdk_path
+        cc = tools.XCRun(self.settings, sdk).cc
 
         cc += " -arch %s" % tools.to_apple_arch(self.settings.arch)
         if not str(self.settings.arch).startswith("arm"):
             cc += " -DOPENSSL_NO_ASM"
+
+        try:
+            cc += " -mios-version-min=%s" % self.settings.os.version
+            self.output.info("iOS deployment target: %s" % self.settings.os.version)
+        except:
+            pass
+
+        cc += " -fembed-bitcode"
 
         os.environ["CROSS_SDK"] = os.path.basename(sysroot)
         os.environ["CROSS_TOP"] = os.path.dirname(os.path.dirname(sysroot))
