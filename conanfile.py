@@ -203,51 +203,19 @@ class OpenSSLConan(ConanFile):
         self.run_in_src("make", show_output=True)
 
     def ios_build(self, config_options_string):
-        def call(cmd):
-            return subprocess.check_output(cmd, shell=False).strip()
-
         def find_sysroot(sdk_name):
-            return call(["xcrun", "--show-sdk-path", "-sdk", sdk_name])
+            return tools.XCRun(self.settings, sdk_name).sdk_path
 
-        def find_program(program, sdk_name=None):
-            args = ["xcrun", "--find", program]
-            if sdk_name:
-                args.extend(["-sdk", sdk_name])
-            return call(args)
-
-        def to_apple_arch(arch):
-            """converts conan-style architecture into Apple-style arch"""
-            return {'x86': 'i386',
-                    'x86_64': 'x86_64',
-                    'armv7': 'armv7',
-                    'armv8': 'arm64',
-                    'armv7s': 'armv7s',
-                    'armv7k': 'armv7k'}.get(str(arch))
-
-        def apple_sdk_name(settings):
-            """returns proper SDK name suitable for OS and architecture
-            we're building for (considering simulators)"""
-            arch = settings.get_safe('arch')
-            _os = settings.get_safe('os')
-            if str(arch).startswith('x86'):
-                return {'Macos': 'macosx',
-                        'iOS': 'iphonesimulator',
-                        'watchOS': 'watchsimulator',
-                        'tvOS': 'appletvsimulator'}.get(str(_os))
-            elif str(arch).startswith('arm'):
-                return {'iOS': 'iphoneos',
-                        'watchOS': 'watchos',
-                        'tvOS': 'appletvos'}.get(str(_os))
-            else:
-                return None
+        def find_cc(settings, sdk_name=None):
+            return tools.XCRun(settings, sdk_name).cc
 
         command = "./Configure iphoneos-cross %s" % config_options_string
 
-        sdk = apple_sdk_name(self.settings)
+        sdk = tools.apple_sdk_name(self.settings)
         sysroot = find_sysroot(sdk)
-        cc = find_program("clang", sdk)
+        cc = find_cc(self.settings, sdk)
 
-        cc += " -arch %s" % to_apple_arch(self.settings.arch)
+        cc += " -arch %s" % tools.to_apple_arch(self.settings.arch)
         if not str(self.settings.arch).startswith("arm"):
             cc += " -DOPENSSL_NO_ASM"
 
