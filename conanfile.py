@@ -2,14 +2,13 @@ from conans import ConanFile, AutoToolsBuildEnvironment
 from conans import tools
 from conans import __version__ as client_version
 import os
-import subprocess
 
 from conans.model.version import Version
 
 
 class OpenSSLConan(ConanFile):
     name = "OpenSSL"
-    version = "1.0.2o"
+    version = "1.0.2p"
     settings = "os", "compiler", "arch", "build_type"
     url = "http://github.com/lasote/conan-openssl"
     license = "The current OpenSSL licence is an 'Apache style' license: https://www.openssl.org/source/license.html"
