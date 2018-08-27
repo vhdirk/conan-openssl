@@ -2,7 +2,6 @@ from conans import ConanFile, AutoToolsBuildEnvironment
 from conans import tools
 from conans import __version__ as client_version
 import os
-import subprocess
 
 from conans.model.version import Version
 
