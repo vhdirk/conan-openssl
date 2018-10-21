@@ -136,10 +136,8 @@ class OpenSSLConan(ConanFile):
         target_prefix = ""
         if self.settings.build_type == "Debug":
             config_options_string = " no-asm" + config_options_string
-            extra_flags += " -O0"
+            extra_flags += self._debug_extra_flags()
             target_prefix = "debug-"
-            if self.settings.compiler in ["apple-clang", "clang", "gcc"]:
-                extra_flags += " -g3 -fno-omit-frame-pointer -fno-inline-functions"
 
         if self.settings.os == "Linux":
             if self.settings.arch == "x86":
@@ -202,7 +200,8 @@ class OpenSSLConan(ConanFile):
         self.run_in_src("make", show_output=True)
 
     def ios_build(self, config_options_string):
-        command = "./Configure iphoneos-cross %s" % config_options_string
+        extra_flags = self._debug_extra_flags() if self.settings.build_type == "Debug" else ""
+        command = "./Configure iphoneos-cross %s %s" % (config_options_string, extra_flags)
 
         sdk = tools.apple_sdk_name(self.settings)
         sysroot = tools.XCRun(self.settings, sdk).sdk_path
@@ -235,11 +234,15 @@ class OpenSSLConan(ConanFile):
         self.run_in_src("make")
 
     def osx_build(self, config_options_string):
-        m32_suff = " -m32" if self.settings.arch == "x86" else ""
+        extra_flags = " -m32" if self.settings.arch == "x86" else ""
+
+        if self.settings.build_type == "Debug":
+            extra_flags += self._debug_extra_flags()
+
         if self.settings.arch == "x86_64":
-            command = "./Configure darwin64-x86_64-cc %s" % config_options_string
+            command = "./Configure darwin64-x86_64-cc %s %s" % (config_options_string, extra_flags)
         else:
-            command = "./config %s %s" % (config_options_string, m32_suff)
+            command = "./config %s %s" % (config_options_string, extra_flags)
 
         self.run_in_src(command)
         # REPLACE -install_name FOR FOLLOW THE CONAN RULES,
@@ -359,6 +362,12 @@ class OpenSSLConan(ConanFile):
         current_libeay = os.path.join(lib_path, "libeay32%s.lib" % suffix)
         os.rename(current_ssleay, os.path.join(lib_path, "ssleay32.lib"))
         os.rename(current_libeay, os.path.join(lib_path, "libeay32.lib"))
+
+    def _debug_extra_flags(self):
+        extra_flags = " -O0"
+        if self.settings.compiler in ["apple-clang", "clang", "gcc"]:
+            extra_flags += " -g3 -fno-omit-frame-pointer -fno-inline-functions"
+        return extra_flags
 
     def package_info(self):
         if self.settings.compiler == "Visual Studio":
