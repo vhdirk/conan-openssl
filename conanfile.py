@@ -213,7 +213,9 @@ class OpenSSLConan(ConanFile):
 
     @property
     def _make_program(self):
-        return tools.get_env("CONAN_MAKE_PROGRAM", tools.which("make") or tools.which('mingw32-make'))
+        make_program = tools.get_env("CONAN_MAKE_PROGRAM", tools.which("make") or tools.which('mingw32-make'))
+        make_program = tools.unix_path(make_program) if self.settings.os == "Windows" else make_program
+        return make_program
 
     def unix_build(self):
         win_bash = self.settings.os == "Windows"
