@@ -211,17 +211,23 @@ class OpenSSLConan(ConanFile):
             if self.settings.compiler == "clang":
                 tools.replace_in_file(makefile, "-mandroid", "", strict=self.in_local_cache)
 
+    @property
+    def _make_program(self):
+        make_program = tools.get_env("CONAN_MAKE_PROGRAM", tools.which("make") or tools.which('mingw32-make'))
+        make_program = tools.unix_path(make_program) if self.settings.os == "Windows" else make_program
+        return make_program
+
     def unix_build(self):
         win_bash = self.settings.os == "Windows"
         target = self._get_target()
 
         self.run_in_src("./Configure %s %s" % (target, self._get_flags()), win_bash=win_bash)
-        self.run_in_src("make depend")
+        self.run_in_src("{make} depend".format(make=self._make_program), win_bash=win_bash)
 
         self._patch_makefile()
 
         self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
-        self.run_in_src("make", show_output=True, win_bash=win_bash)
+        self.run_in_src(self._make_program, show_output=True, win_bash=win_bash)
 
     def ios_build(self):
         config_options_string = self._get_config_options_string()
@@ -242,7 +248,7 @@ class OpenSSLConan(ConanFile):
         self.run_in_src(command)
         self._patch_install_name()
         self.output.warn("----------MAKE OPENSSL %s-------------" % self.version)
-        self.run_in_src("make")
+        self.run_in_src(self._make_program)
 
     def _patch_install_name(self):
         old_str = '-install_name $(INSTALLTOP)/$(LIBDIR)/$(SHLIBNAME_FULL)'
