@@ -135,6 +135,7 @@ class OpenSSLConan(ConanFile):
                     extra_flags += " -g3 -fno-omit-frame-pointer -fno-inline-functions"
                 if self.settings.os in ["Linux", "SunOS", "FreeBSD", "Android"]:
                     extra_flags += " no-asm"
+            
         else:
             extra_flags = "--debug" if self.settings.build_type == "Debug" else "--release"
             extra_flags += " no-shared" if not self.options.shared else " shared"
@@ -201,18 +202,29 @@ class OpenSSLConan(ConanFile):
 
         return target
 
+    def _patch_configurefile(self):
+        if self.settings.os == "Android":
+            configurefile = os.path.join(self.subfolder, "Configurations", "15-android.conf")
+            if self.settings.compiler == "clang":
+                tools.replace_in_file(
+                    configurefile, 'die "no NDK $triarch-gcc on \$PATH";', '#die "no NDK $triarch-gcc on \$PATH";', strict=self.in_local_cache)
+
     def _patch_makefile(self):
         if self.settings.os == "Macos":
             self._patch_install_name()
         if self.settings.os == "Android":
             makefile = os.path.join(self.subfolder, "Makefile")
-            tools.replace_in_file(makefile, "--sysroot=$(CROSS_SYSROOT)", "")
+            tools.replace_in_file(
+                makefile, "--sysroot=$(ANDROID_NDK)/", "--sysroot=")
             if self.settings.compiler == "clang":
                 tools.replace_in_file(makefile, "-mandroid", "", strict=self.in_local_cache)
+                tools.replace_in_file(makefile, r"$${LDCMD:-$(CC)}", r"$${LDCMD:$(CC)}", strict=self.in_local_cache)
 
     def unix_build(self):
         win_bash = self.settings.os == "Windows"
         target = self._get_target()
+
+        self._patch_configurefile()
 
         self.run_in_src("./Configure %s %s" % (target, self._get_flags()), win_bash=win_bash)
         self.run_in_src("make depend")
