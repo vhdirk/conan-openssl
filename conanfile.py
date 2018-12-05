@@ -220,6 +220,11 @@ class OpenSSLConan(ConanFile):
                 tools.replace_in_file(makefile, "-mandroid", "", strict=self.in_local_cache)
                 tools.replace_in_file(makefile, r"$${LDCMD:-$(CC)}", r"$${LDCMD:$(CC)}", strict=self.in_local_cache)
 
+            if self.settings.arch == "x86":
+                tools.replace_in_file(makefile, r"CROSS_COMPILE=i686-linux-android-", r"CROSS_COMPILE=-", strict=False)
+            if self.settings.arch == "x86_64":
+                tools.replace_in_file(makefile, r"CROSS_COMPILE=x86_64-linux-android-", r"CROSS_COMPILE=-", strict=False)
+    
     def unix_build(self):
         win_bash = self.settings.os == "Windows"
         target = self._get_target()
